@@ -39,3 +39,5 @@ for post in posts[:30]:
                 (title, tags, content, post, student_id))
 
 conn.commit()
+cur.close()
+conn.close()

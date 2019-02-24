@@ -10,6 +10,7 @@ cur = conn.cursor()
 cur.execute("select * from articles")
 result_set = cur.fetchall()
 stop_words = set(stopwords.words('russian'))
+stop_words.add(' ')
 snowball_stemmer = SnowballStemmer("russian")
 m = Mystem()
 
@@ -19,13 +20,23 @@ for row in result_set:
 
     tokenizer = RegexpTokenizer(r'\w+')
     word_tokens = tokenizer.tokenize(sentence)
+
     filtered_words = [w for w in word_tokens if not w in stop_words]
-    snowball_result_set = [snowball_stemmer.stem(word) for word in filtered_words]
+    snowball_result_set = set([snowball_stemmer.stem(word) for word in filtered_words])
 
     print(snowball_result_set)
 
-    lemmas = m.lemmatize(sentence)
-    print(lemmas)
+    for term in snowball_result_set:
+        cur.execute("insert into words_porter(term, article_id) values (%s, %s)", (term, article_id))
 
+    lemmas = m.lemmatize(sentence)
+    filtered_lemmas = set([w for w in word_tokens if not w in stop_words])
+
+    print(filtered_lemmas)
+
+    for term in filtered_lemmas:
+        cur.execute("insert into words_mystem(term, article_id) values (%s, %s)", (term, article_id))
+
+conn.commit()
 cur.close()
 conn.close()
