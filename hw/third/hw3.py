@@ -5,7 +5,7 @@ from nltk.stem.snowball import SnowballStemmer
 
 conn = psycopg2.connect(database='searching', user='postgres', password='postgres')
 cur = conn.cursor()
-stop_words = set(stopwords.words('russian'))
+stop_words = stopwords.words('russian')
 stop_words.add(' ')
 snowball_stemmer = SnowballStemmer("russian")
 
@@ -14,7 +14,7 @@ def fill_data():
     cur.execute('SELECT term from words_porter')
     words = cur.fetchall()
     words = [word[0] for word in words]
-    words = sorted(set(words))
+    words = sorted(words)
 
     for w in words:
         cur.execute("""INSERT into terms_list(term_text) values (%s) ON CONFLICT (term_text)
@@ -25,7 +25,8 @@ def fill_data():
         articles = cur.fetchall()
 
         for article in articles:
-            cur.execute('INSERT into article_term(article_id, term_id) values (%s, %s)', (article[0], word_id))
+            cur.execute('INSERT into article_term(article_id, term_id) values (%s, %s) on conflict do nothing ',
+                        (article[0], word_id))
         conn.commit()
 
 
@@ -34,7 +35,7 @@ def filter_sentence(sentence):
     word_tokens = tokenizer.tokenize(sentence)
 
     filtered_words = [w for w in word_tokens if not w in stop_words]
-    snowball_result_set = set([snowball_stemmer.stem(word) for word in filtered_words])
+    snowball_result_set = [snowball_stemmer.stem(word) for word in filtered_words]
     return snowball_result_set
 
 
@@ -45,6 +46,17 @@ def intersection(lst1, lst2):
         return lst1
     lst3 = [value for value in lst1 if value in lst2]
     return lst3
+
+
+def get_article_url_by_id(ids):
+    urls = []
+    for id in ids:
+        cur.execute('select a.url from articles a where a.id = %s', (id,))
+        rows = cur.fetchall()
+        for row in rows:
+            urls.append(row[0])
+    urls = set(urls)
+    return urls
 
 
 def inverted_index_search(sentence):
@@ -63,10 +75,11 @@ def inverted_index_search(sentence):
     for word, articles in sorted_words:
         if len(articles) > 0:
             result = intersection(result, articles)
-    return result
+    urls = get_article_url_by_id(result)
+    return urls
 
 
 if __name__ == '__main__':
     # needed only once
-    # fill_data()
+    fill_data()
     print(inverted_index_search("я сломал систему слов"))

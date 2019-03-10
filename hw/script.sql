@@ -44,5 +44,11 @@ create table article_term
   term_id    uuid REFERENCES terms_list (term_id)
 );
 
-create index terms_list_index on terms_list (term_text);
+create index terms_list_index
+  on terms_list (term_text);
+
+ALTER TABLE article_term
+  ADD UNIQUE (article_id, term_id);
+alter table article_term
+  add tf_idf float;
 
