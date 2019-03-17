@@ -6,7 +6,7 @@ from nltk.stem.snowball import SnowballStemmer
 conn = psycopg2.connect(database='searching', user='postgres', password='postgres')
 cur = conn.cursor()
 stop_words = stopwords.words('russian')
-stop_words.add(' ')
+stop_words.append(' ')
 snowball_stemmer = SnowballStemmer("russian")
 
 
