@@ -10,13 +10,13 @@ cur = conn.cursor()
 cur.execute("select * from articles")
 result_set = cur.fetchall()
 stop_words = stopwords.words('russian')
-stop_words.add(' ')
+stop_words.append(' ')
 snowball_stemmer = SnowballStemmer("russian")
 m = Mystem()
 
 for row in result_set:
     article_id = row[0]
-    sentence = row[1].lower()
+    sentence = row[3].lower()
 
     tokenizer = RegexpTokenizer(r'\w+')
     word_tokens = tokenizer.tokenize(sentence)
